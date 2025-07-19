@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReuseLa</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for main content */
+        main::-webkit-scrollbar {
+            width: 8px;
+        }
+        main::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        main::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        main::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10 rounded-b-xl">
+        <h1 class="text-2xl font-bold text-green-700" id="app-name">ReuseLa</h1>
+        <button id="language-toggle" class="flex items-center space-x-1 p-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium hover:bg-blue-200 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <span id="language-text">BM</span>
+        </button>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="flex-grow p-4 pb-20 overflow-y-auto">
+        <!-- Page content will be rendered here by JavaScript -->
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+            <p id="loading-text" class="mt-4 text-white text-lg">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Message Box -->
+    <div id="message-box-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full text-center">
+            <h3 id="message-box-title" class="text-xl font-semibold mb-4 text-green-700">Message</h3>
+            <p id="message-box-content" class="text-gray-700 mb-6"></p>
+            <button id="message-box-close" class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors shadow-md">Close</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-3 flex justify-around items-center rounded-t-xl z-20">
+        <button id="nav-home" class="nav-item flex flex-col items-center p-2 rounded-lg transition-colors text-green-600 bg-green-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-home"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span class="text-xs mt-1" data-lang-key="home">Home</span>
+        </button>
+        <button id="nav-browse" class="nav-item flex flex-col items-center p-2 rounded-lg transition-colors text-gray-500 hover:text-green-600 hover:bg-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span class="text-xs mt-1" data-lang-key="browseItems">Browse Items</span>
+        </button>
+        <button id="nav-post" class="nav-item flex flex-col items-center p-2 rounded-lg transition-colors text-gray-500 hover:text-green-600 hover:bg-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-circle"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+            <span class="text-xs mt-1" data-lang-key="postItem">Post Item</span>
+        </button>
+        <button id="nav-myRequests" class="nav-item flex flex-col items-center p-2 rounded-lg transition-colors text-gray-500 hover:text-green-600 hover:bg-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+            <span class="text-xs mt-1" data-lang-key="myRequests">My Requests</span>
+        </button>
+        <button id="nav-loginRegister" class="nav-item flex flex-col items-center p-2 rounded-lg transition-colors text-gray-500 hover:text-green-600 hover:bg-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="text-xs mt-1" data-lang-key="loginRegister">Login/Register</span>
+        </button>
+    </nav>
+
+    <script>
+        // Helper function to simulate API calls
+        const simulateApiCall = (data, delay = 500) => {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    resolve(data);
+                }, delay);
+            });
+        };
+
+        // Translations object
+        const translations = {
+            en: {
+                appName: "ReuseLa",
+                tagline: "Reusing for a Sustainable Malaysia",
+                home: "Home",
+                browseItems: "Browse Items",
+                postItem: "Post Item",
+                myRequests: "My Requests",
+                loginRegister: "Login/Register",
+                csrImpact: "CSR/Impact",
+                welcomeBannerTitle: "Welcome to ReuseLa!",
+                welcomeBannerSubtitle: "Connecting communities for a greener future.",
+                quickStats: "Quick Stats",
+                itemsReused: "items reused",
+                weightDiverted: "weight diverted from landfill",
+                giveItem: "Give Item",
+                findItem: "Find Item",
+                browseItemsTitle: "Browse Available Items",
+                filterByCategory: "Filter by Category",
+                allCategories: "All Categories",
+                books: "Books",
+                appliances: "Appliances",
+                furniture: "Furniture",
+                others: "Others",
+                filterByLocation: "Filter by Location",
+                locationInputPlaceholder: "e.g., Subang, Penang",
+                applyFilters: "Apply Filters",
+                postItemTitle: "Post Your Item for Reuse",
+                uploadPhoto: "Upload Photo",
+                itemTitle: "Item Title",
+                description: "Description",
+                condition: "Condition",
+                selectCondition: "Select Condition",
+                new: "New",
+                good: "Good",
+                fair: "Fair",
+                damaged: "Damaged (but usable)",
+                postcode: "Postcode",
+                postcodeHint: "Enter a 5-digit postcode",
+                postItemButton: "Post Item",
+                myRequestsTitle: "My Requests & Posted Items",
+                noRequestsYet: "You haven't made any requests or posted items yet.",
+                loginRegisterTitle: "Join ReuseLa",
+                phone: "Phone Number",
+                email: "Email Address",
+                password: "Password",
+                login: "Login",
+                register: "Register",
+                dontHaveAccount: "Don't have an account?",
+                alreadyHaveAccount: "Already have an account?",
+                csrImpactTitle: "Our Impact",
+                totalItemsReused: "Total Items Reused",
+                totalWeightDiverted: "Total Weight Diverted (kg)",
+                thankYou: "Thank you for being a part of ReuseLa!",
+                itemDetails: "Item Details",
+                category: "Category",
+                location: "Location",
+                requestItem: "Request Item",
+                back: "Back",
+                viewDetails: "View Details",
+                itemPostedSuccessfully: "Item posted successfully!",
+                requestSubmitted: "Request submitted successfully!",
+                loginSuccessful: "Login successful!",
+                registerSuccessful: "Registration successful!",
+                errorPostingItem: "Error posting item. Please try again.",
+                errorRequestingItem: "Error requesting item. Please try again.",
+                errorLogin: "Login failed. Please check your credentials.",
+                errorRegister: "Registration failed. Please try again.",
+                loading: "Loading...",
+                messageBoxTitle: "Message",
+                close: "Close",
+                allFieldsMandatory: "Please fill in all mandatory fields (Photo, Title, Description, Condition, Postcode).",
+                invalidPostcode: "Invalid postcode. Please enter a 5-digit number.",
+                locationNotFound: "Location not found for this postcode.",
+            },
+            bm: {
+                appName: "ReuseLa",
+                tagline: "Mengguna Semula untuk Malaysia Lestari",
+                home: "Utama",
+                browseItems: "Cari Barangan",
+                postItem: "Iklan Barangan",
+                myRequests: "Permintaan Saya",
+                loginRegister: "Log Masuk/Daftar",
+                csrImpact: "Impak CSR",
+                welcomeBannerTitle: "Selamat Datang ke ReuseLa!",
+                welcomeBannerSubtitle: "Menghubungkan komuniti untuk masa depan yang lebih hijau.",
+                quickStats: "Statistik Pantas",
+                itemsReused: "barang diguna semula",
+                weightDiverted: "berat dialihkan dari tapak pelupusan",
+                giveItem: "Beri Barangan",
+                findItem: "Cari Barangan",
+                browseItemsTitle: "Cari Barangan Tersedia",
+                filterByCategory: "Tapis mengikut Kategori",
+                allCategories: "Semua Kategori",
+                books: "Buku",
+                appliances: "Peralatan Elektrik",
+                furniture: "Perabot",
+                others: "Lain-lain",
+                filterByLocation: "Tapis mengikut Lokasi",
+                locationInputPlaceholder: "cth., Subang, Penang",
+                applyFilters: "Guna Penapis",
+                postItemTitle: "Iklankan Barangan Anda untuk Diguna Semula",
+                uploadPhoto: "Muat Naik Gambar",
+                itemTitle: "Tajuk Barangan",
+                description: "Penerangan",
+                condition: "Keadaan",
+                selectCondition: "Pilih Keadaan",
+                new: "Baru",
+                good: "Baik",
+                fair: "Sederhana",
+                damaged: "Rosak (tetapi masih boleh guna)",
+                postcode: "Poskod",
+                postcodeHint: "Masukkan poskod 5 digit",
+                postItemButton: "Iklankan Barangan",
+                myRequestsTitle: "Permintaan & Barangan Saya",
+                noRequestsYet: "Anda belum membuat sebarang permintaan atau mengiklankan barangan lagi.",
+                loginRegisterTitle: "Sertai ReuseLa",
+                phone: "Nombor Telefon",
+                email: "Alamat E-mel",
+                password: "Kata Laluan",
+                login: "Log Masuk",
+                register: "Daftar",
+                dontHaveAccount: "Tiada akaun?",
+                alreadyHaveAccount: "Sudah ada akaun?",
+                csrImpactTitle: "Impak Kami",
+                totalItemsReused: "Jumlah Barangan Diguna Semula",
+                totalWeightDiverted: "Jumlah Berat Dialihkan (kg)",
+                thankYou: "Terima kasih kerana menjadi sebahagian daripada ReuseLa!",
+                itemDetails: "Butiran Barangan",
+                category: "Kategori",
+                location: "Lokasi",
+                requestItem: "Minta Barangan",
+                back: "Kembali",
+                viewDetails: "Lihat Butiran",
+                itemPostedSuccessfully: "Barangan berjaya diiklankan!",
+                requestSubmitted: "Permintaan berjaya dihantar!",
+                loginSuccessful: "Log masuk berjaya!",
+                registerSuccessful: "Pendaftaran berjaya!",
+                errorPostingItem: "Ralat mengiklankan barangan. Sila cuba lagi.",
+                errorRequestingItem: "Ralat meminta barangan. Sila cuba lagi.",
+                errorLogin: "Log masuk gagal. Sila semak kelayakan anda.",
+                errorRegister: "Pendaftaran gagal. Sila cuba lagi.",
+                loading: "Memuatkan...",
+                messageBoxTitle: "Mesej",
+                close: "Tutup",
+                allFieldsMandatory: "Sila isi semua medan mandatori (Gambar, Tajuk, Penerangan, Keadaan, Poskod).",
+                invalidPostcode: "Poskod tidak sah. Sila masukkan nombor 5 digit.",
+                locationNotFound: "Lokasi tidak ditemui untuk poskod ini.",
+            }
+        };
+
+        let currentLanguage = 'en';
+        let currentItems = []; // All items
+        let filteredItems = []; // Items after filtering
+        let selectedCategory = 'all';
+        let selectedLocation = '';
+        let selectedItem = null; // For item details page
+
+        const mainContent = document.getElementById('main-content');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const messageBoxOverlay = document.getElementById('message-box-overlay');
+        const messageBoxTitle = document.getElementById('message-box-title');
+        const messageBoxContent = document.getElementById('message-box-content');
+        const messageBoxCloseBtn = document.getElementById('message-box-close');
+        const languageToggleBtn = document.getElementById('language-toggle');
+        const languageTextSpan = document.getElementById('language-text');
+        const appNameHeader = document.getElementById('app-name');
+
+        // --- Utility Functions ---
+        const showLoading = (show) => {
+            loadingOverlay.classList.toggle('hidden', !show);
+            loadingText.textContent = translations[currentLanguage].loading;
+        };
+
+        const showMessage = (msg) => {
+            messageBoxContent.textContent = msg;
+            messageBoxTitle.textContent = translations[currentLanguage].messageBoxTitle;
+            messageBoxOverlay.classList.remove('hidden');
+        };
+
+        const closeMessageBox = () => {
+            messageBoxOverlay.classList.add('hidden');
+            messageBoxContent.textContent = '';
+        };
+
+        // Function to update all text content based on currentLanguage
+        const updateTextContent = () => {
+            const t = translations[currentLanguage];
+            appNameHeader.textContent = t.appName;
+            languageTextSpan.textContent = currentLanguage === 'en' ? 'BM' : 'ENG';
+
+            document.querySelectorAll('[data-lang-key]').forEach(element => {
+                const key = element.getAttribute('data-lang-key');
+                if (t[key]) {
+                    element.textContent = t[key];
+                }
+            });
+            // Re-render current page to update dynamic content
+            renderPage(currentPage);
+        };
+
+        // Function to map postcode to city (same as React version)
+        const getCityFromPostcode = (pc) => {
+            if (!pc || pc.length !== 5 || isNaN(pc)) {
+                return '';
+            }
+            const pcNum = parseInt(pc, 10);
+
+            if (pcNum >= 10000 && pcNum <= 14999) {
+                if (pcNum >= 13000 && pcNum <= 13999) return 'Butterworth';
+                return 'Penang';
+            } else if (pcNum >= 40000 && pcNum <= 48999) {
+                if (pcNum >= 47500 && pcNum <= 47699) return 'Subang Jaya';
+                if (pcNum >= 46000 && pcNum <= 46999) return 'Petaling Jaya';
+                return 'Selangor';
+            } else if (pcNum >= 50000 && pcNum <= 60000) {
+                return 'Kuala Lumpur';
+            }
+            return '';
+        };
+
+        // --- Page Rendering Functions ---
+
+        const renderHomePage = () => {
+            const t = translations[currentLanguage];
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Welcome Banner -->
+                    <div class="bg-gradient-to-r from-green-400 to-blue-400 p-6 rounded-2xl text-white shadow-lg">
+                        <h2 class="text-3xl font-bold mb-2">${t.welcomeBannerTitle}</h2>
+                        <p class="text-lg">${t.welcomeBannerSubtitle}</p>
+                        <p class="text-sm mt-4 opacity-90">${t.tagline}</p>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="bg-white p-6 rounded-2xl shadow-md">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">${t.quickStats}</h3>
+                        <div class="flex justify-around items-center text-center">
+                            <div class="flex flex-col items-center">
+                                <span class="text-4xl font-bold text-green-600">1,200+</span>
+                                <span class="text-gray-600 text-sm">${t.itemsReused}</span>
+                            </div>
+                            <div class="w-px h-12 bg-gray-200 mx-4"></div>
+                            <div class="flex flex-col items-center">
+                                <span class="text-4xl font-bold text-blue-600">5,000+kg</span>
+                                <span class="text-gray-600 text-sm">${t.weightDiverted}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CTA Buttons -->
+                    <div class="grid grid-cols-1 gap-4">
+                        <button id="home-give-item" class="flex items-center justify-center bg-green-500 text-white py-4 px-6 rounded-xl text-lg font-semibold shadow-md hover:bg-green-600 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-circle mr-2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                            ${t.giveItem}
+                        </button>
+                        <button id="home-find-item" class="flex items-center justify-center bg-blue-500 text-white py-4 px-6 rounded-xl text-lg font-semibold shadow-md hover:bg-blue-600 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search mr-2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            ${t.findItem}
+                        </button>
+                    </div>
+
+                    <!-- CSR/Impact Link -->
+                    <div class="text-center mt-6">
+                        <button id="home-csr-impact" class="text-blue-600 hover:underline flex items-center justify-center mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart-2 mr-1"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                            ${t.csrImpact}
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('home-give-item').onclick = () => navigateTo('post');
+            document.getElementById('home-find-item').onclick = () => navigateTo('browse');
+            document.getElementById('home-csr-impact').onclick = () => navigateTo('csrImpact');
+        };
+
+        const renderBrowseItemsPage = () => {
+            const t = translations[currentLanguage];
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">${t.browseItemsTitle}</h2>
+
+                    <!-- Filters -->
+                    <div class="bg-white p-5 rounded-2xl shadow-md space-y-4">
+                        <div>
+                            <label for="category-filter" class="block text-gray-700 font-medium mb-2">${t.filterByCategory}</label>
+                            <select id="category-filter" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                                <option value="all">${t.allCategories}</option>
+                                <option value="Books">${t.books}</option>
+                                <option value="Appliances">${t.appliances}</option>
+                                <option value="Furniture">${t.furniture}</option>
+                                <option value="Others">${t.others}</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="location-filter" class="block text-gray-700 font-medium mb-2">${t.filterByLocation}</label>
+                            <input type="text" id="location-filter" placeholder="${t.locationInputPlaceholder}" value="${selectedLocation}" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50"/>
+                        </div>
+                    </div>
+
+                    <!-- Item List -->
+                    <div id="item-list-container"></div>
+                </div>
+            `;
+
+            const categoryFilter = document.getElementById('category-filter');
+            categoryFilter.value = selectedCategory; // Set initial value
+            categoryFilter.onchange = (e) => {
+                selectedCategory = e.target.value;
+                applyFilters();
+            };
+
+            const locationFilter = document.getElementById('location-filter');
+            locationFilter.value = selectedLocation; // Set initial value
+            locationFilter.oninput = (e) => {
+                selectedLocation = e.target.value;
+                applyFilters();
+            };
+
+            applyFilters(); // Initial filter application
+        };
+
+        const applyFilters = () => {
+            const t = translations[currentLanguage];
+            const itemListContainer = document.getElementById('item-list-container');
+            showLoading(true);
+
+            let currentFilteredItems = [...currentItems]; // Start with all items
+
+            if (selectedCategory !== 'all') {
+                currentFilteredItems = currentFilteredItems.filter(item => item.category === selectedCategory);
+            }
+
+            if (selectedLocation) {
+                const lowerCaseLocation = selectedLocation.toLowerCase();
+                currentFilteredItems = currentFilteredItems.filter(item => {
+                    const itemCity = item.city ? item.city.toLowerCase() : '';
+                    const itemPostcode = item.postcode || '';
+
+                    if (itemCity.includes(lowerCaseLocation)) {
+                        return true;
+                    }
+
+                    const postcodePrefix = itemPostcode.substring(0, 1);
+                    if (lowerCaseLocation.includes('penang') || lowerCaseLocation.includes('butterworth')) {
+                        return postcodePrefix === '1';
+                    } else if (lowerCaseLocation.includes('subang') || lowerCaseLocation.includes('selangor')) {
+                        return postcodePrefix === '4';
+                    } else if (lowerCaseLocation.includes('kuala lumpur')) {
+                        return postcodePrefix === '5';
+                    }
+                    return false;
+                });
+            }
+            filteredItems = currentFilteredItems; // Update global filteredItems
+
+            // Simulate loading delay
+            setTimeout(() => {
+                showLoading(false);
+                if (filteredItems.length === 0) {
+                    itemListContainer.innerHTML = `
+                        <div class="text-center text-gray-600 py-8">No items found matching your criteria.</div>
+                    `;
+                } else {
+                    itemListContainer.innerHTML = `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            ${filteredItems.map(item => `
+                                <div class="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col">
+                                    <img src="${item.imageUrl}" alt="${item.title}" class="w-full h-48 object-cover object-center" onerror="this.onerror=null;this.src='https://placehold.co/400x300/e0f2f7/263238?text=${item.category}';"/>
+                                    <div class="p-4 flex-grow flex flex-col">
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-1">${item.title}</h3>
+                                        <p class="text-sm text-gray-600 mb-2 line-clamp-2">${item.description}</p>
+                                        <div class="flex items-center text-gray-500 text-xs mb-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tag mr-1"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414L12.586 22.414a2 2 0 0 0 2.828 0l7.172-7.172a2 2 0 0 0 0-2.828L12.586 2.586z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+                                            ${item.category}
+                                        </div>
+                                        <div class="flex items-center text-gray-500 text-xs mb-3">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin mr-1"><path d="M12 2v20M18 10H6M12 2a8 8 0 0 0-8 8c0 7.2 7 10 7 10s7-2.8 7-10a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                                            ${item.postcode} ${item.city ? `(${item.city})` : ''}
+                                        </div>
+                                        <div class="mt-auto">
+                                            <button data-item-id="${item.id}" class="view-details-btn w-full bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm">
+                                                ${t.viewDetails}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    document.querySelectorAll('.view-details-btn').forEach(button => {
+                        button.onclick = (e) => {
+                            const itemId = e.target.dataset.itemId;
+                            selectedItem = filteredItems.find(item => item.id === itemId);
+                            navigateTo('itemDetails');
+                        };
+                    });
+                }
+            }, 300); // Small delay for filter effect
+        };
+
+        const renderItemDetailsPage = () => {
+            const t = translations[currentLanguage];
+            if (!selectedItem) {
+                mainContent.innerHTML = `
+                    <div class="text-center text-gray-600 py-8">
+                        <p>No item selected.</p>
+                        <button id="back-to-browse" class="mt-4 text-blue-600 hover:underline">${t.back}</button>
+                    </div>
+                `;
+                document.getElementById('back-to-browse').onclick = () => navigateTo('browse');
+                return;
+            }
+
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <button id="back-to-browse" class="flex items-center text-blue-600 hover:underline mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left mr-1"><path d="m15 18-6-6 6-6"/></svg>
+                        ${t.back}
+                    </button>
+
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">${t.itemDetails}</h2>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-md">
+                        <img src="${selectedItem.imageUrl}" alt="${selectedItem.title}" class="w-full h-64 object-cover object-center rounded-xl mb-4" onerror="this.onerror=null;this.src='https://placehold.co/600x400/e0f2f7/263238?text=${selectedItem.category}';"/>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">${selectedItem.title}</h3>
+                        <p class="text-gray-700 mb-4">${selectedItem.description}</p>
+
+                        <div class="space-y-2 text-gray-600">
+                            <p class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tag mr-2 text-green-500"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414L12.586 22.414a2 2 0 0 0 2.828 0l7.172-7.172a2 2 0 0 0 0-2.828L12.586 2.586z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg> <span class="font-semibold">${t.category}:</span> ${selectedItem.category}</p>
+                            <p class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle mr-2 text-blue-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg> <span class="font-semibold">${t.condition}:</span> ${selectedItem.condition}</p>
+                            <p class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin mr-2 text-red-500"><path d="M12 2v20M18 10H6M12 2a8 8 0 0 0-8 8c0 7.2 7 10 7 10s7-2.8 7-10a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg> <span class="font-semibold">${t.location}:</span> ${selectedItem.postcode} ${selectedItem.city ? `(${selectedItem.city})` : ''}</p>
+                        </div>
+
+                        <button id="request-item-btn" class="w-full bg-green-500 text-white py-3 mt-6 rounded-xl text-lg font-semibold shadow-md hover:bg-green-600 transition-colors">
+                            ${t.requestItem}
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('back-to-browse').onclick = () => navigateTo('browse');
+            document.getElementById('request-item-btn').onclick = () => handleRequestItem(selectedItem.id);
+        };
+
+        const renderPostItemPage = () => {
+            const t = translations[currentLanguage];
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">${t.postItemTitle}</h2>
+
+                    <form id="post-item-form" class="bg-white p-6 rounded-2xl shadow-md space-y-5">
+                        <!-- Photo Upload -->
+                        <div class="flex flex-col items-center">
+                            <label for="image-upload" class="cursor-pointer bg-blue-100 text-blue-700 py-3 px-6 rounded-xl font-semibold hover:bg-blue-200 transition-colors flex items-center justify-center w-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                ${t.uploadPhoto} <span class="text-red-500 ml-1">*</span>
+                                <input id="image-upload" type="file" accept="image/*" class="hidden"/>
+                            </label>
+                            <img id="image-preview" src="" alt="Preview" class="mt-4 w-full h-48 object-cover rounded-xl border border-gray-200 hidden"/>
+                        </div>
+
+                        <!-- Item Title -->
+                        <div>
+                            <label for="item-title" class="block text-gray-700 font-medium mb-2">${t.itemTitle} <span class="text-red-500">*</span></label>
+                            <input type="text" id="item-title" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 bg-gray-50" placeholder="${t.itemTitle}" required/>
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <label for="description" class="block text-gray-700 font-medium mb-2">${t.description} <span class="text-red-500">*</span></label>
+                            <textarea id="description" rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 bg-gray-50 resize-y" placeholder="${t.description}" required></textarea>
+                        </div>
+
+                        <!-- Condition -->
+                        <div>
+                            <label for="condition" class="block text-gray-700 font-medium mb-2">${t.condition} <span class="text-red-500">*</span></label>
+                            <select id="condition" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 bg-gray-50" required>
+                                <option value="">${t.selectCondition}</option>
+                                <option value="New">${t.new}</option>
+                                <option value="Good">${t.good}</option>
+                                <option value="Fair">${t.fair}</option>
+                                <option value="Damaged">${t.damaged}</option>
+                            </select>
+                        </div>
+
+                        <!-- Postcode -->
+                        <div>
+                            <label for="postcode" class="block text-gray-700 font-medium mb-2">${t.postcode} <span class="text-red-500">*</span></label>
+                            <input type="text" id="postcode" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 bg-gray-50" placeholder="${t.postcodeHint}" maxlength="5" required/>
+                            <p id="postcode-location-info" class="text-sm text-gray-600 mt-1 hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin inline-block mr-1 text-blue-500"><path d="M12 2v20M18 10H6M12 2a8 8 0 0 0-8 8c0 7.2 7 10 7 10s7-2.8 7-10a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span id="derived-city-text"></span>
+                            </p>
+                            <p id="postcode-error-info" class="text-sm text-red-500 mt-1 hidden"></p>
+                        </div>
+
+                        <button type="submit" id="post-item-button" class="w-full bg-green-500 text-white py-4 rounded-xl text-lg font-semibold shadow-md hover:bg-green-600 transition-colors">
+                            ${t.postItemButton}
+                        </button>
+                    </form>
+                </div>
+            `;
+
+            const imageUploadInput = document.getElementById('image-upload');
+            const imagePreview = document.getElementById('image-preview');
+            const postcodeInput = document.getElementById('postcode');
+            const postcodeLocationInfo = document.getElementById('postcode-location-info');
+            const derivedCityText = document.getElementById('derived-city-text');
+            const postcodeErrorInfo = document.getElementById('postcode-error-info');
+            const postItemForm = document.getElementById('post-item-form');
+            const postItemButton = document.getElementById('post-item-button');
+
+            imageUploadInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        imagePreview.src = reader.result;
+                        imagePreview.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    imagePreview.src = '';
+                    imagePreview.classList.add('hidden');
+                }
+            };
+
+            postcodeInput.oninput = () => {
+                const pc = postcodeInput.value.trim();
+                const city = getCityFromPostcode(pc);
+
+                postcodeLocationInfo.classList.add('hidden');
+                postcodeErrorInfo.classList.add('hidden');
+
+                if (pc.length === 5) {
+                    if (city) {
+                        derivedCityText.textContent = `${t.location}: ${city}`;
+                        postcodeLocationInfo.classList.remove('hidden');
+                    } else {
+                        postcodeErrorInfo.textContent = t.locationNotFound;
+                        postcodeErrorInfo.classList.remove('hidden');
+                    }
+                } else if (pc.length > 0 && pc.length < 5) {
+                    postcodeErrorInfo.textContent = t.invalidPostcode;
+                    postcodeErrorInfo.classList.remove('hidden');
+                }
+            };
+
+            postItemForm.onsubmit = async (e) => {
+                e.preventDefault();
+                showLoading(true);
+
+                const title = document.getElementById('item-title').value.trim();
+                const description = document.getElementById('description').value.trim();
+                const condition = document.getElementById('condition').value;
+                const postcode = document.getElementById('postcode').value.trim();
+                const imageUrl = imagePreview.src;
+                const derivedCity = getCityFromPostcode(postcode);
+
+                if (!imageUrl || !title || !description || !condition || !postcode) {
+                    showMessage(t.allFieldsMandatory);
+                    showLoading(false);
+                    return;
+                }
+
+                if (postcode.length !== 5 || isNaN(postcode)) {
+                    showMessage(t.invalidPostcode);
+                    showLoading(false);
+                    return;
+                }
+
+                if (!derivedCity) {
+                    showMessage(t.locationNotFound);
+                    showLoading(false);
+                    return;
+                }
+
+                const itemData = { title, description, condition, postcode, city: derivedCity, imageUrl };
+                try {
+                    await simulateApiCall({ success: true }, 1000);
+                    showMessage(t.itemPostedSuccessfully);
+                    // Clear form
+                    document.getElementById('item-title').value = '';
+                    document.getElementById('description').value = '';
+                    document.getElementById('condition').value = '';
+                    document.getElementById('postcode').value = '';
+                    imagePreview.src = '';
+                    imagePreview.classList.add('hidden');
+                    postcodeLocationInfo.classList.add('hidden');
+                    postcodeErrorInfo.classList.add('hidden');
+                    navigateTo('home');
+                } catch (error) {
+                    showMessage(t.errorPostingItem);
+                } finally {
+                    showLoading(false);
+                }
+            };
+        };
+
+        const renderMyRequestsPage = () => {
+            const t = translations[currentLanguage];
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">${t.myRequestsTitle}</h2>
+                    <div class="bg-white p-6 rounded-2xl shadow-md text-center text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list mx-auto text-gray-400 mb-4"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                        <p>${t.noRequestsYet}</p>
+                        <p class="mt-2 text-sm">Check back here to see items you've requested or posted.</p>
+                    </div>
+                </div>
+            `;
+        };
+
+        const renderLoginRegisterPage = () => {
+            const t = translations[currentLanguage];
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">${t.loginRegisterTitle}</h2>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-md space-y-5">
+                        <div class="flex justify-center mb-4">
+                            <button id="login-tab" class="px-6 py-2 rounded-l-xl font-semibold transition-colors bg-green-500 text-white shadow-md">
+                                ${t.login}
+                            </button>
+                            <button id="register-tab" class="px-6 py-2 rounded-r-xl font-semibold transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200">
+                                ${t.register}
+                            </button>
+                        </div>
+
+                        <form id="auth-form" class="space-y-5">
+                            <div>
+                                <label for="phone-email" class="block text-gray-700 font-medium mb-2">${t.phone} / ${t.email}</label>
+                                <div class="flex items-center border border-gray-300 rounded-lg focus-within:ring-blue-500 focus-within:border-blue-500 bg-gray-50">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-phone ml-3 text-gray-400"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-1.18 2.19l-.7.35a16 16 0 0 0 6 6l.35-.7a2 2 0 0 1 2.19-1.18 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                    <input type="text" id="phone-email" class="w-full p-3 bg-transparent outline-none" placeholder="e.g., 0123456789 or email@example.com" required/>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="password" class="block text-gray-700 font-medium mb-2">${t.password}</label>
+                                <div class="flex items-center border border-gray-300 rounded-lg focus-within:ring-blue-500 focus-within:border-blue-500 bg-gray-50">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock ml-3 text-gray-400"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    <input type="password" id="password" class="w-full p-3 bg-transparent outline-none" placeholder="********" required/>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="auth-submit-button" class="w-full bg-blue-500 text-white py-4 rounded-xl text-lg font-semibold shadow-md hover:bg-blue-600 transition-colors">
+                                ${t.login}
+                            </button>
+                        </form>
+
+                        <p class="text-center text-sm text-gray-600 mt-4">
+                            <span id="auth-toggle-text">${t.dontHaveAccount}</span>
+                            <button id="auth-toggle-button" class="text-blue-600 hover:underline font-medium">
+                                ${t.register}
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            let isLogin = true; // Internal state for login/register form
+
+            const loginTab = document.getElementById('login-tab');
+            const registerTab = document.getElementById('register-tab');
+            const authSubmitButton = document.getElementById('auth-submit-button');
+            const authToggleText = document.getElementById('auth-toggle-text');
+            const authToggleButton = document.getElementById('auth-toggle-button');
+            const authForm = document.getElementById('auth-form');
+
+            const updateAuthFormUI = () => {
+                if (isLogin) {
+                    loginTab.classList.add('bg-green-500', 'text-white', 'shadow-md');
+                    loginTab.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                    registerTab.classList.remove('bg-green-500', 'text-white', 'shadow-md');
+                    registerTab.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                    authSubmitButton.textContent = t.login;
+                    authToggleText.textContent = t.dontHaveAccount;
+                    authToggleButton.textContent = t.register;
+                } else {
+                    registerTab.classList.add('bg-green-500', 'text-white', 'shadow-md');
+                    registerTab.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                    loginTab.classList.remove('bg-green-500', 'text-white', 'shadow-md');
+                    loginTab.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                    authSubmitButton.textContent = t.register;
+                    authToggleText.textContent = t.alreadyHaveAccount;
+                    authToggleButton.textContent = t.login;
+                }
+            };
+
+            loginTab.onclick = () => { isLogin = true; updateAuthFormUI(); };
+            registerTab.onclick = () => { isLogin = false; updateAuthFormUI(); };
+            authToggleButton.onclick = () => { isLogin = !isLogin; updateAuthFormUI(); };
+
+            authForm.onsubmit = async (e) => {
+                e.preventDefault();
+                showLoading(true);
+                const phoneOrEmail = document.getElementById('phone-email').value;
+                const password = document.getElementById('password').value;
+
+                if (isLogin) {
+                    try {
+                        await simulateApiCall({ success: true, user: { id: 'user123' } }, 1000);
+                        showMessage(t.loginSuccessful);
+                        navigateTo('home');
+                    } catch (error) {
+                        showMessage(t.errorLogin);
+                    } finally {
+                        showLoading(false);
+                    }
+                } else {
+                    try {
+                        await simulateApiCall({ success: true, user: { id: 'newuser' } }, 1000);
+                        showMessage(t.registerSuccessful);
+                        // Optionally switch to login tab after successful registration
+                        isLogin = true;
+                        updateAuthFormUI();
+                    } catch (error) {
+                        showMessage(t.errorRegister);
+                    } finally {
+                        showLoading(false);
+                    }
+                }
+            };
+            updateAuthFormUI(); // Initial UI setup
+        };
+
+        const renderCSRImpactPage = () => {
+            const t = translations[currentLanguage];
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">${t.csrImpactTitle}</h2>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-md">
+                        <div class="flex flex-col items-center text-center mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe text-green-500 mb-4"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                            <p class="text-gray-700 text-lg leading-relaxed">
+                                At ReuseLa, we believe in the power of community to create a sustainable future.
+                                Every item reused is a step towards reducing waste and supporting families in need.
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
+                            <div class="bg-green-50 p-5 rounded-xl shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart-2 mx-auto text-green-600 mb-2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                                <span class="block text-3xl font-bold text-green-700">1,200+</span>
+                                <span class="block text-gray-600 text-sm">${t.totalItemsReused}</span>
+                            </div>
+                            <div class="bg-blue-50 p-5 rounded-xl shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-locate-fixed mx-auto text-blue-600 mb-2"><path d="M2 12h20"/><path d="M12 2v20"/><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z"/></svg>
+                                <span class="block text-3xl font-bold text-blue-700">5,000+</span>
+                                <span class="block text-gray-600 text-sm">${t.totalWeightDiverted}</span>
+                            </div>
+                        </div>
+
+                        <p class="text-center text-gray-700 mt-8 text-lg font-medium">
+                            ${t.thankYou}
+                        </p>
+                    </div>
+                </div>
+            `;
+        };
+
+        // --- Navigation Logic ---
+        let currentPage = 'home'; // Initial page
+
+        const navigateTo = (page) => {
+            currentPage = page;
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('text-green-600', 'bg-green-50');
+                btn.classList.add('text-gray-500', 'hover:text-green-600', 'hover:bg-gray-100');
+            });
+
+            const activeNavBtn = document.getElementById(`nav-${page}`);
+            if (activeNavBtn) {
+                activeNavBtn.classList.add('text-green-600', 'bg-green-50');
+                activeNavBtn.classList.remove('text-gray-500', 'hover:text-green-600', 'hover:bg-gray-100');
+            }
+
+            renderPage(page);
+        };
+
+        const renderPage = (page) => {
+            switch (page) {
+                case 'home':
+                    renderHomePage();
+                    break;
+                case 'browse':
+                    renderBrowseItemsPage();
+                    break;
+                case 'post':
+                    renderPostItemPage();
+                    break;
+                case 'myRequests':
+                    renderMyRequestsPage();
+                    break;
+                case 'loginRegister':
+                    renderLoginRegisterPage();
+                    break;
+                case 'csrImpact':
+                    renderCSRImpactPage();
+                    break;
+                case 'itemDetails':
+                    renderItemDetailsPage();
+                    break;
+                default:
+                    renderHomePage();
+            }
+        };
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Fetch mock items once on load
+            showLoading(true);
+            currentItems = await simulateApiCall([
+                { id: '1', title: 'Children\'s Story Books', description: 'A collection of classic children\'s story books in good condition.', condition: 'Good', postcode: '47300', city: 'Subang Jaya', category: 'Books', imageUrl: 'https://placehold.co/400x300/e0f2f7/263238?text=Books' },
+                { id: '2', title: 'Working Refrigerator', description: 'Used refrigerator, still in good working condition. Minor dents.', condition: 'Fair', postcode: '50000', city: 'Kuala Lumpur', category: 'Appliances', imageUrl: 'https://placehold.co/400x300/e0f2f7/263238?text=Refrigerator' },
+                { id: '3', title: 'Study Desk with Chair', description: 'Simple wooden study desk with a comfortable chair. Ideal for students.', condition: 'Good', postcode: '46050', city: 'Petaling Jaya', category: 'Furniture', imageUrl: 'https://placehold.co/400x300/e0f2f7/263238?text=Desk' },
+                { id: '4', title: 'Assorted Kitchen Utensils', description: 'Various kitchen utensils, including spatulas, ladles, and knives.', condition: 'Good', postcode: '47810', city: 'Petaling Jaya', category: 'Others', imageUrl: 'https://placehold.co/400x300/e0f2f7/263238?text=Utensils' },
+                { id: '5', title: 'Old Textbooks (SPM)', description: 'SPM textbooks for various subjects, slightly worn but usable.', condition: 'Fair', postcode: '10000', city: 'Penang', category: 'Books', imageUrl: 'https://placehold.co/400x300/e0f2f7/263238?text=Textbooks' },
+                { id: '6', title: 'Microwave Oven', description: 'Compact microwave oven, fully functional.', condition: 'Good', postcode: '13700', city: 'Butterworth', category: 'Appliances', imageUrl: 'https://placehold.co/400x300/e0f2f7/263238?text=Microwave' },
+                { id: '7', title: 'Toddler Playpen', description: 'Safe and sturdy playpen for toddlers, foldable.', condition: 'Good', postcode: '43000', city: 'Kajang', category: 'Furniture', imageUrl: 'https://placehold.co/400x300/e0f2f7/263238?text=Playpen' },
+                { id: '8', title: 'Electric Kettle', description: 'Brand new electric kettle, never used.', condition: 'New', postcode: '47500', city: 'Subang Jaya', category: 'Appliances', imageUrl: 'https://placehold.co/400x300/e0f2f7/263238?text=Kettle' },
+                { id: '9', title: 'Fiction Novels Set', description: 'A set of popular fiction novels, good for light reading.', condition: 'Good', postcode: '10300', city: 'Penang', category: 'Books', imageUrl: 'https://placehold.co/400x300/e0f2f7/263238?text=Novels' },
+            ], 500);
+            showLoading(false);
+
+            // Initial render
+            navigateTo('home');
+
+            // Navigation buttons
+            document.getElementById('nav-home').onclick = () => navigateTo('home');
+            document.getElementById('nav-browse').onclick = () => navigateTo('browse');
+            document.getElementById('nav-post').onclick = () => navigateTo('post');
+            document.getElementById('nav-myRequests').onclick = () => navigateTo('myRequests');
+            document.getElementById('nav-loginRegister').onclick = () => navigateTo('loginRegister');
+
+            // Message box close button
+            messageBoxCloseBtn.onclick = closeMessageBox;
+
+            // Language toggle
+            languageToggleBtn.onclick = () => {
+                currentLanguage = currentLanguage === 'en' ? 'bm' : 'en';
+                updateTextContent();
+            };
+        });
+    </script>
+</body>
+</html>
