@@ -297,7 +297,7 @@ export default function ItemDetailsPage() {
           isOpen={showRequestModal}
           onClose={() => setShowRequestModal(false)}
           item={{
-            id: item.id,
+            id: String(item.id),
             title: item.title,
             contact_name: item.contact_name,
             contact_email: item.contact_email,
