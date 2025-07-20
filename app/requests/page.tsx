@@ -266,11 +266,11 @@ export default function RequestsPage() {
               await sendEmailToRequester({
                 requesterEmail: fullRequestData.requester_email,
                 requesterName: fullRequestData.requester_name,
-                itemTitle: fullRequestData.items?.title || 'Unknown Item',
-                ownerName: fullRequestData.items?.contact_name || 'Item Owner',
-                ownerEmail: fullRequestData.items?.contact_email || '',
-                ownerPhone: fullRequestData.items?.contact_phone || '',
-                location: `${fullRequestData.items?.city || ''} ${fullRequestData.items?.postcode || ''}`.trim(),
+                itemTitle: fullRequestData.items?.[0]?.title || 'Unknown Item',
+                ownerName: fullRequestData.items?.[0]?.contact_name || 'Item Owner',
+                ownerEmail: fullRequestData.items?.[0]?.contact_email || '',
+                ownerPhone: fullRequestData.items?.[0]?.contact_phone || '',
+                location: `${fullRequestData.items?.[0]?.city || ''} ${fullRequestData.items?.[0]?.postcode || ''}`.trim(),
                 originalMessage: fullRequestData.message,
                 status: 'approved'
               })
@@ -278,11 +278,11 @@ export default function RequestsPage() {
               await sendEmailToRequester({
                 requesterEmail: fullRequestData.requester_email,
                 requesterName: fullRequestData.requester_name,
-                itemTitle: fullRequestData.items?.title || 'Unknown Item',
-                ownerName: fullRequestData.items?.contact_name || 'Item Owner',
-                ownerEmail: fullRequestData.items?.contact_email || '',
-                ownerPhone: fullRequestData.items?.contact_phone || '',
-                location: `${fullRequestData.items?.city || ''} ${fullRequestData.items?.postcode || ''}`.trim(),
+                itemTitle: fullRequestData.items?.[0]?.title || 'Unknown Item',
+                ownerName: fullRequestData.items?.[0]?.contact_name || 'Item Owner',
+                ownerEmail: fullRequestData.items?.[0]?.contact_email || '',
+                ownerPhone: fullRequestData.items?.[0]?.contact_phone || '',
+                location: `${fullRequestData.items?.[0]?.city || ''} ${fullRequestData.items?.[0]?.postcode || ''}`.trim(),
                 originalMessage: fullRequestData.message,
                 status: 'rejected'
               })
