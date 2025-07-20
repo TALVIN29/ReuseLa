@@ -113,6 +113,8 @@ export default function BrowsePage() {
   const fetchItems = async () => {
     try {
       setLoading(true)
+      console.log('Fetching items with status "Available"...')
+      
       const { data, error } = await supabase
         .from('items')
         .select('*')
@@ -123,6 +125,10 @@ export default function BrowsePage() {
         console.error('Error fetching items:', error)
         return
       }
+
+      console.log('Fetched items:', data)
+      console.log('Items with status "Available":', data?.filter(item => item.status === 'Available'))
+      console.log('Items with other statuses:', data?.filter(item => item.status !== 'Available'))
 
       setItems(data || [])
       setFilteredItems(data || [])
@@ -140,12 +146,37 @@ export default function BrowsePage() {
     setRefreshing(false)
   }
 
+  // Enhanced refresh function that also logs the current items
+  const enhancedRefresh = async () => {
+    console.log('Enhanced refresh triggered...')
+    setRefreshing(true)
+    
+    // First, let's check the actual status of item 7 in the database
+    console.log('Checking item 7 status in database...')
+    const { data: item7Data, error: item7Error } = await supabase
+      .from('items')
+      .select('*')
+      .eq('id', '7')
+      .single()
+    
+    if (item7Error) {
+      console.error('Error fetching item 7:', item7Error)
+    } else {
+      console.log('Item 7 current status in database:', item7Data)
+    }
+    
+    await fetchItems()
+    console.log('Current items after refresh:', items)
+    setRefreshing(false)
+  }
+
   useEffect(() => {
     fetchItems()
 
-    // Set up real-time subscription
+    console.log('Setting up browse page real-time subscription...')
+    // Set up real-time subscription with comprehensive event listening
     const channel = supabase
-      .channel('items_changes')
+      .channel('browse_items_changes')
       .on(
         'postgres_changes',
         {
@@ -154,9 +185,15 @@ export default function BrowsePage() {
           table: 'items'
         },
         (payload) => {
+          console.log('Browse page received real-time event:', payload.eventType, payload)
+          
+          // Test: Log all events to see if real-time is working at all
+          console.log('Full payload:', JSON.stringify(payload, null, 2))
+          
           // Handle different types of changes
           if (payload.eventType === 'INSERT') {
             const newItem = payload.new as Item
+            console.log('INSERT event for item:', newItem)
             if (newItem.status === 'Available') {
               setItems(prev => [newItem, ...prev])
             }
@@ -164,34 +201,70 @@ export default function BrowsePage() {
             const updatedItem = payload.new as Item
             const oldItem = payload.old as Item
             
+            console.log(`Browse page received UPDATE: Item ${updatedItem.id} status changed from ${oldItem.status} to ${updatedItem.status}`)
+            
             if (updatedItem.status === 'Available' && oldItem.status !== 'Available') {
               // Item became available again
+              console.log(`Adding item ${updatedItem.id} back to browse list`)
               setItems(prev => [updatedItem, ...prev.filter(item => item.id !== updatedItem.id)])
             } else if (updatedItem.status !== 'Available' && oldItem.status === 'Available') {
               // Item is no longer available
+              console.log(`Removing item ${updatedItem.id} from browse list (status: ${updatedItem.status})`)
               setItems(prev => prev.filter(item => item.id !== updatedItem.id))
             } else if (updatedItem.status === 'Available') {
               // Item was updated but still available
+              console.log(`Updating item ${updatedItem.id} in browse list`)
               setItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item))
             }
           } else if (payload.eventType === 'DELETE') {
             const deletedItem = payload.old as Item
+            console.log('DELETE event for item:', deletedItem)
             setItems(prev => prev.filter(item => item.id !== deletedItem.id))
           }
         }
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          // console.log('✅ Real-time subscription active!')
+          console.log('✅ Browse page - Real-time subscription active!')
         } else if (status === 'CHANNEL_ERROR') {
-          // console.error('❌ Real-time subscription failed!')
+          console.error('❌ Browse page - Real-time subscription failed!')
+        } else {
+          console.log(`Browse page - Subscription status: ${status}`)
         }
       })
 
     // Cleanup subscription on unmount
     return () => {
-      // console.log('Cleaning up real-time subscription')
+      console.log('Cleaning up browse page real-time subscription')
       supabase.removeChannel(channel)
+    }
+  }, [])
+
+  // Add multiple refresh triggers for better user experience
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('Page focused - refreshing items...')
+      fetchItems()
+    }
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('Page became visible - refreshing items...')
+        fetchItems()
+      }
+    }
+
+    // Listen for focus and visibility changes
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    // Also refresh when the component mounts
+    console.log('Browse page mounted - initial refresh')
+    fetchItems()
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
 
@@ -232,14 +305,16 @@ export default function BrowsePage() {
       <main className="p-4 pt-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Browse Available Items</h1>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={enhancedRefresh}
+              disabled={refreshing}
+              className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Search and Filters */}

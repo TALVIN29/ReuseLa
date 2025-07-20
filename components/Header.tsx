@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Search, PlusCircle, List, User, LogOut } from 'lucide-react'
+import { Home, Search, PlusCircle, List, User, LogOut, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
@@ -12,6 +12,7 @@ export default function Header() {
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/browse', icon: Search, label: 'Browse' },
+    { href: '/dashboard', icon: BarChart3, label: 'Impact' },
     ...(user ? [
       { href: '/post', icon: PlusCircle, label: 'Post' },
       { href: '/requests', icon: List, label: 'Requests' },

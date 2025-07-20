@@ -3,13 +3,26 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
-import { User, Mail, LogOut, Shield, Heart } from 'lucide-react'
+import { User, Mail, LogOut, Shield, Heart, TrendingUp, Award } from 'lucide-react'
+
+interface UserStats {
+  itemsPosted: number
+  itemsRequested: number
+  itemsCompleted: number
+  impactScore: number
+}
 
 export default function ProfilePage() {
   const router = useRouter()
   const { user, signOut } = useAuth()
-  const [userItems, setUserItems] = useState([])
+  const [userStats, setUserStats] = useState<UserStats>({
+    itemsPosted: 0,
+    itemsRequested: 0,
+    itemsCompleted: 0,
+    impactScore: 0
+  })
   const [loading, setLoading] = useState(true)
 
   // Redirect to login if not authenticated
@@ -18,6 +31,58 @@ export default function ProfilePage() {
       router.push('/login')
     }
   }, [user, router])
+
+  // Fetch user statistics
+  useEffect(() => {
+    if (!user) return
+
+    const fetchUserStats = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch items posted by user
+        const { data: postedItems, error: postedError } = await supabase
+          .from('items')
+          .select('*')
+          .eq('user_id', user.id)
+
+        if (postedError) {
+          console.error('Error fetching posted items:', postedError)
+        }
+
+        // Fetch requests made by user
+        const { data: requestedItems, error: requestedError } = await supabase
+          .from('requests')
+          .select('*')
+          .eq('requester_id', user.id)
+
+        if (requestedError) {
+          console.error('Error fetching requested items:', requestedError)
+        }
+
+        // Calculate statistics
+        const itemsPosted = postedItems?.length || 0
+        const itemsRequested = requestedItems?.length || 0
+        const itemsCompleted = postedItems?.filter(item => item.status === 'Taken').length || 0
+        
+        // Calculate impact score (items completed * 10 points each)
+        const impactScore = itemsCompleted * 10
+
+        setUserStats({
+          itemsPosted,
+          itemsRequested,
+          itemsCompleted,
+          impactScore
+        })
+      } catch (error) {
+        console.error('Error fetching user stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserStats()
+  }, [user])
 
   const handleSignOut = async () => {
     try {
@@ -81,17 +146,39 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Impact Score */}
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Impact Score</h3>
+            <Award className="w-6 h-6 text-yellow-600" />
+          </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-green-600 mb-2">{userStats.impactScore}</div>
+            <div className="text-sm text-gray-600">Points earned from completed donations</div>
+          </div>
+        </div>
+
+        {/* Activity Stats */}
         <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">My Activity</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">0</div>
+              <div className="text-2xl font-bold text-blue-600">{userStats.itemsPosted}</div>
               <div className="text-sm text-gray-600">Items Posted</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">0</div>
+              <div className="text-2xl font-bold text-green-600">{userStats.itemsRequested}</div>
               <div className="text-sm text-gray-600">Items Requested</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">{userStats.itemsCompleted}</div>
+              <div className="text-sm text-gray-600">Completed</div>
+            </div>
+            <div className="text-center p-4 bg-orange-50 rounded-lg">
+              <div className="text-2xl font-bold text-orange-600">
+                {userStats.itemsCompleted > 0 ? Math.round(userStats.itemsCompleted * 2.5) : 0}kg
+              </div>
+              <div className="text-sm text-gray-600">Waste Diverted</div>
             </div>
           </div>
         </div>
@@ -104,6 +191,14 @@ export default function ProfilePage() {
           >
             <Heart className="w-5 h-5 mr-2" />
             Post New Item
+          </button>
+          
+          <button
+            onClick={() => router.push('/requests')}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center"
+          >
+            <TrendingUp className="w-5 h-5 mr-2" />
+            View My Requests
           </button>
           
           <button

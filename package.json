@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "setup-env": "node scripts/setup-env.js",
+    "setup-improvements": "node scripts/setup-improvements.js",
     "check-security": "powershell -ExecutionPolicy Bypass -File scripts/check-security.ps1"
   },
   "dependencies": {

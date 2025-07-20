@@ -129,14 +129,19 @@ export default function HomePage() {
             const updatedItem = payload.new as Item
             const oldItem = payload.old as Item
             
+            console.log(`Home page received UPDATE: Item ${updatedItem.id} status changed from ${oldItem.status} to ${updatedItem.status}`)
+            
             if (updatedItem.status === 'Available' && oldItem.status !== 'Available') {
               // Item became available again
+              console.log(`Adding item ${updatedItem.id} back to home list`)
               setItems(prev => [updatedItem, ...prev.filter(item => item.id !== updatedItem.id).slice(0, 7)])
             } else if (updatedItem.status !== 'Available' && oldItem.status === 'Available') {
               // Item is no longer available
+              console.log(`Removing item ${updatedItem.id} from home list (status: ${updatedItem.status})`)
               setItems(prev => prev.filter(item => item.id !== updatedItem.id))
             } else if (updatedItem.status === 'Available') {
               // Item was updated but still available
+              console.log(`Updating item ${updatedItem.id} in home list`)
               setItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item))
             }
           } else if (payload.eventType === 'DELETE') {
@@ -155,6 +160,72 @@ export default function HomePage() {
     // Cleanup subscription on unmount
     return () => {
       supabase.removeChannel(channel)
+    }
+  }, [])
+
+  // Add multiple refresh triggers for better user experience
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('Home page focused - refreshing items...')
+      // Re-fetch items when user returns to the page
+      const fetchItems = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('items')
+            .select('*')
+            .eq('status', 'Available')
+            .order('created_at', { ascending: false })
+            .limit(8)
+
+          if (error) {
+            console.error('Error fetching items:', error)
+            return
+          }
+
+          setItems(data || [])
+          setFilteredItems(data || [])
+        } catch (error) {
+          console.error('Error fetching items:', error)
+        }
+      }
+      fetchItems()
+    }
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('Home page became visible - refreshing items...')
+        // Re-fetch items when page becomes visible
+        const fetchItems = async () => {
+          try {
+            const { data, error } = await supabase
+              .from('items')
+              .select('*')
+              .eq('status', 'Available')
+              .order('created_at', { ascending: false })
+              .limit(8)
+
+            if (error) {
+              console.error('Error fetching items:', error)
+              return
+            }
+
+            setItems(data || [])
+            setFilteredItems(data || [])
+          } catch (error) {
+            console.error('Error fetching items:', error)
+          }
+        }
+        fetchItems()
+      }
+    }
+
+    // Listen for focus and visibility changes
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
 

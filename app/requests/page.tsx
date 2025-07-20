@@ -159,40 +159,30 @@ export default function RequestsPage() {
         let newItemStatus = 'Available' // Default
 
         if (newStatus === 'Approved') {
-          newItemStatus = 'Reserved'
+          newItemStatus = 'Requested'
         } else if (newStatus === 'Completed') {
-          // When marking as completed, always set item to Collected
-          newItemStatus = 'Collected'
+          // When marking as completed, always set item to Taken
+          newItemStatus = 'Taken'
         } else if (newStatus === 'Rejected') {
-          // Check if there are any other approved or completed requests for this item
-          const { data: otherActiveRequests } = await supabase
-            .from('requests')
-            .select('id, status')
-            .eq('item_id', requestData.item_id)
-            .in('status', ['Approved', 'Completed'])
-            .neq('id', requestId)
-
-          // If no other approved/completed requests, set item back to Available
-          if (!otherActiveRequests || otherActiveRequests.length === 0) {
-            newItemStatus = 'Available'
-          } else {
-            // If there are other approved requests, keep as Reserved
-            // If there are completed requests, set as Collected
-            const hasCompleted = otherActiveRequests.some(req => req.status === 'Completed')
-            newItemStatus = hasCompleted ? 'Collected' : 'Reserved'
-          }
+          // When rejecting a request, always set item back to Available
+          // This allows the item to be requested again by others
+          newItemStatus = 'Available'
         }
 
-        // Update the item status
-        const { error: itemUpdateError } = await supabase
-          .from('items')
-          .update({ status: newItemStatus })
-          .eq('id', requestData.item_id)
+        // Update the item status using the database function
+        console.log(`Updating item ${requestData.item_id} status from current to: ${newItemStatus}`)
+        const { data: updateResult, error: itemUpdateError } = await supabase
+          .rpc('update_item_status', {
+            item_id: requestData.item_id,
+            new_status: newItemStatus
+          })
 
         if (itemUpdateError) {
           console.error('Error updating item status:', itemUpdateError)
           alert(`Request updated but failed to update item status: ${itemUpdateError.message}`)
           return
+        } else {
+          console.log(`Successfully updated item status to: ${newItemStatus}. Result:`, updateResult)
         }
       }
 
@@ -201,7 +191,9 @@ export default function RequestsPage() {
         req.id === requestId ? { ...req, status: newStatus } : req
       ))
 
-      alert(`Request ${newStatus.toLowerCase()} successfully`)
+      // Show a message to refresh other pages
+      console.log('Request status updated - user should refresh browse/home pages')
+      alert(`Request ${newStatus.toLowerCase()} successfully. Please refresh the browse/home pages to see updated item status.`)
     } catch (error) {
       console.error('Error updating request:', error)
       alert('Error updating request status')
