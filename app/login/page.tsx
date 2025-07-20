@@ -113,16 +113,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen">
       <Header />
       
       <main className="p-4 pt-6">
         <div className="max-w-md mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center animate-fade-in-down">
             {isLogin ? 'Welcome Back' : 'Join ReuseLa'}
           </h1>
 
-          <div className="bg-white p-6 rounded-2xl shadow-md">
+          <div className="bg-gradient-to-br from-white to-primary-100 p-8 rounded-2xl shadow-xl border-2 border-primary-400 animate-bounce-in">
             {/* Tab Toggle */}
             <div className="flex mb-6 bg-gray-100 rounded-xl p-1">
               <button
@@ -250,7 +250,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-primary-500 text-white py-3 rounded-xl font-semibold shadow-md hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+                className="w-full bg-gradient-to-r from-primary-600 to-secondary-600 text-white py-3 rounded-xl font-bold shadow-xl hover:from-primary-700 hover:to-secondary-700 transition-all duration-200 hover-scale disabled:opacity-50 disabled:cursor-not-allowed mt-6"
               >
                 {isSubmitting 
                   ? (isLogin ? 'Signing In...' : 'Creating Account...') 

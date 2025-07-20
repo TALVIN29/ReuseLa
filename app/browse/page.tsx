@@ -299,7 +299,7 @@ export default function BrowsePage() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen">
       <Header />
       
       <main className="p-4 pt-6">

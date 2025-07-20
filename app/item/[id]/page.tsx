@@ -130,7 +130,7 @@ export default function ItemDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pb-20">
+      <div className="min-h-screen">
         <Header />
         <main className="p-4 pt-6">
           <div className="flex items-center justify-center py-12">
@@ -143,7 +143,7 @@ export default function ItemDetailsPage() {
 
   if (!item) {
     return (
-      <div className="min-h-screen pb-20">
+      <div className="min-h-screen">
         <Header />
         <main className="p-4 pt-6">
           <div className="text-center py-12">
@@ -162,7 +162,7 @@ export default function ItemDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen">
       <Header />
       
       <main className="p-4 pt-6">

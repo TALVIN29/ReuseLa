@@ -65,8 +65,12 @@ export default function DashboardPage() {
         const activeItems = items?.filter(item => item.status === 'Available').length || 0
         const totalRequests = requests?.length || 0
         
-        // Calculate waste diverted (estimated 2.5kg per item)
-        const wasteDiverted = Math.round(completedItems * 2.5)
+        // Calculate waste diverted using actual item weights
+        const wasteDiverted = Math.round(
+          items
+            ?.filter(item => item.status === 'Taken' && item.weight)
+            .reduce((total, item) => total + (item.weight || 0), 0) || 0
+        )
 
         // Calculate top categories
         const categoryCounts = items?.reduce((acc: any, item) => {
@@ -117,7 +121,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pb-20">
+      <div className="min-h-screen">
         <Header />
         <main className="p-4 pt-6">
           <div className="text-center py-12">
@@ -130,7 +134,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen">
       <Header />
       
       <main className="p-4 pt-6">
@@ -142,42 +146,42 @@ export default function DashboardPage() {
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Package className="w-6 h-6 text-blue-600" />
-              <span className="text-sm text-gray-500">Total Items</span>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-stagger">
+          <div className="bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl shadow-lg p-6 border-2 border-primary-400">
+            <div className="flex items-center justify-between mb-3">
+              <Package className="w-7 h-7 text-primary-700" />
+              <span className="text-sm font-semibold text-primary-800">Total Items</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">{stats.totalItems}</div>
+            <div className="text-3xl font-bold text-primary-900">{stats.totalItems}</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Award className="w-6 h-6 text-green-600" />
-              <span className="text-sm text-gray-500">Completed</span>
+          <div className="bg-gradient-to-br from-success-200 to-success-300 rounded-2xl shadow-lg p-6 border-2 border-success-600">
+            <div className="flex items-center justify-between mb-3">
+              <Award className="w-7 h-7 text-success-800" />
+              <span className="text-sm font-bold text-success-900">Completed</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">{stats.completedItems}</div>
+            <div className="text-3xl font-bold text-success-900">{stats.completedItems}</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-2">
-              <TrendingUp className="w-6 h-6 text-purple-600" />
-              <span className="text-sm text-gray-500">Waste Diverted</span>
+          <div className="bg-gradient-to-br from-accent-100 to-accent-200 rounded-2xl shadow-lg p-6 border-2 border-accent-400">
+            <div className="flex items-center justify-between mb-3">
+              <TrendingUp className="w-7 h-7 text-accent-700" />
+              <span className="text-sm font-semibold text-accent-800">Waste Diverted</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">{stats.wasteDiverted}kg</div>
+            <div className="text-3xl font-bold text-accent-900">{stats.wasteDiverted}kg</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Users className="w-6 h-6 text-orange-600" />
-              <span className="text-sm text-gray-500">Active Users</span>
+          <div className="bg-gradient-to-br from-info-200 to-info-300 rounded-2xl shadow-lg p-6 border-2 border-info-600">
+            <div className="flex items-center justify-between mb-3">
+              <Users className="w-7 h-7 text-info-800" />
+              <span className="text-sm font-bold text-info-900">Active Users</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">{stats.totalUsers}</div>
+            <div className="text-3xl font-bold text-info-900">{stats.totalUsers}</div>
           </div>
         </div>
 
         {/* Impact Summary */}
-        <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl shadow-md p-6 mb-8">
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl shadow-md p-6 mb-8 animate-fade-in-up" style={{animationDelay: '0.3s'}}>
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Environmental Impact</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
@@ -196,7 +200,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 animate-fade-in-up" style={{animationDelay: '0.4s'}}>
           {/* Top Categories */}
           <div className="bg-white rounded-2xl shadow-md p-6">
             <div className="flex items-center mb-4">

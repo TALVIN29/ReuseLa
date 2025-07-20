@@ -16,6 +16,7 @@ export default function PostPage() {
     category: '',
     condition: '',
     postcode: '',
+    weight: '',
     contactName: '',
     contactPhone: '',
     contactEmail: '',
@@ -111,6 +112,12 @@ export default function PostPage() {
       newErrors.contactEmail = 'Please enter a valid email address'
     }
 
+    if (!formData.weight.trim()) {
+      newErrors.weight = 'Weight is required'
+    } else if (isNaN(Number(formData.weight)) || Number(formData.weight) <= 0) {
+      newErrors.weight = 'Please enter a valid weight (greater than 0)'
+    }
+
     if (!formData.image) {
       newErrors.image = 'Please upload a photo'
     }
@@ -176,6 +183,7 @@ export default function PostPage() {
             condition: formData.condition,
             postcode: formData.postcode,
             city: city,
+            weight: Number(formData.weight),
             image_url: imageUrl,
             contact_name: formData.contactName.trim(),
             contact_phone: formData.contactPhone.trim(),
@@ -201,38 +209,72 @@ export default function PostPage() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen">
       <Header />
       
       <main className="p-4 pt-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Post Your Item for Reuse</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in-up">
           {/* Photo Upload */}
-          <div className="bg-white p-6 rounded-2xl shadow-md">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-gradient-to-br from-white to-primary-100 p-6 rounded-2xl shadow-lg border-2 border-primary-400">
+            <label className="block text-sm font-medium text-gray-700 mb-4">
               Upload Photo <span className="text-red-500">*</span>
             </label>
             
             <div className="flex flex-col items-center">
-              <label className="cursor-pointer bg-blue-100 text-blue-700 py-3 px-6 rounded-xl font-semibold hover:bg-blue-200 transition-colors flex items-center justify-center w-full">
-                <Upload className="w-5 h-5 mr-2" />
-                Choose Photo
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-              </label>
-              
-              {imagePreview && (
-                <div className="mt-4 w-full">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-48 object-cover rounded-xl border border-gray-200"
+              {!imagePreview ? (
+                <label className="cursor-pointer bg-blue-100 text-blue-700 py-8 px-6 rounded-xl font-semibold hover:bg-blue-200 transition-all duration-200 hover-scale flex items-center justify-center w-full border-2 border-dashed border-blue-300 min-h-[200px]">
+                  <div className="text-center flex flex-col items-center justify-center">
+                    <Upload className="w-8 h-8 mb-3" />
+                    <div className="text-lg font-semibold mb-1">Choose Photo</div>
+                    <div className="text-sm text-blue-600">Click to upload an image of your item</div>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
                   />
+                </label>
+              ) : (
+                <div className="w-full">
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-80 object-contain rounded-xl border-2 border-gray-200 shadow-lg"
+                    />
+                    <div className="absolute top-2 right-2 flex space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, image: null }))
+                          setImagePreview('')
+                        }}
+                        className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-md"
+                        title="Remove photo"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                      <label className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors shadow-md cursor-pointer" title="Change photo">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-center">
+                    <p className="text-sm text-gray-600">✅ Photo uploaded successfully! You can change or remove it using the buttons above.</p>
+                  </div>
                 </div>
               )}
               
@@ -246,7 +288,7 @@ export default function PostPage() {
           </div>
 
           {/* Item Details */}
-          <div className="bg-white p-6 rounded-2xl shadow-md space-y-4">
+          <div className="bg-gradient-to-br from-white to-secondary-100 p-6 rounded-2xl shadow-lg border-2 border-secondary-400 space-y-4">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Item Details</h3>
             
             {/* Title */}
@@ -348,10 +390,29 @@ export default function PostPage() {
                 <p className="text-red-500 text-sm mt-1">{errors.postcode}</p>
               )}
             </div>
+
+            {/* Weight */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Weight (kg) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={formData.weight}
+                onChange={(e) => setFormData(prev => ({ ...prev, weight: e.target.value }))}
+                className="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white text-gray-900 placeholder-gray-500 font-medium"
+                placeholder="e.g., 2.5"
+              />
+              {errors.weight && (
+                <p className="text-red-500 text-sm mt-1">{errors.weight}</p>
+              )}
+            </div>
           </div>
 
           {/* Contact Information */}
-          <div className="bg-white p-6 rounded-2xl shadow-md space-y-4">
+          <div className="bg-gradient-to-br from-white to-accent-100 p-6 rounded-2xl shadow-lg border-2 border-accent-400 space-y-4">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Information</h3>
             
             {/* Contact Name */}
@@ -419,7 +480,7 @@ export default function PostPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-primary-500 text-white py-4 rounded-xl text-lg font-semibold shadow-md hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-success-600 to-primary-600 text-white py-4 rounded-xl text-lg font-bold shadow-xl hover:from-success-700 hover:to-primary-700 transition-all duration-200 hover-scale disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Posting Item...' : 'Post Item'}
           </button>

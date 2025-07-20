@@ -314,7 +314,7 @@ export default function RequestsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen pb-20">
+      <div className="min-h-screen">
         <Header />
         <main className="p-4 pt-6">
           <div className="text-center py-12">
@@ -327,7 +327,7 @@ export default function RequestsPage() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen">
       <Header />
       
       <main className="p-4 pt-6">

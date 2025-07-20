@@ -24,6 +24,7 @@ export interface Item {
   contact_email: string
   user_id: string
   status: 'Available' | 'Requested' | 'Taken' | 'Expired'
+  weight: number // Weight in kilograms
   created_at: string
   updated_at: string
 }
