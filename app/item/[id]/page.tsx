@@ -24,7 +24,11 @@ const mockItems: Item[] = [
     user_id: 'user1',
     status: 'Available',
     created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-01-15T10:00:00Z'
+    updated_at: '2024-01-15T10:00:00Z',
+    contact_name: 'John Doe',
+    contact_phone: '+60123456789',
+    contact_email: 'john@example.com',
+    weight: 2.5
   },
   {
     id: '2',
@@ -38,7 +42,11 @@ const mockItems: Item[] = [
     user_id: 'user2',
     status: 'Available',
     created_at: '2024-01-14T15:30:00Z',
-    updated_at: '2024-01-14T15:30:00Z'
+    updated_at: '2024-01-14T15:30:00Z',
+    contact_name: 'Jane Smith',
+    contact_phone: '+60123456790',
+    contact_email: 'jane@example.com',
+    weight: 45.0
   },
   {
     id: '3',
@@ -52,7 +60,11 @@ const mockItems: Item[] = [
     user_id: 'user3',
     status: 'Available',
     created_at: '2024-01-13T09:15:00Z',
-    updated_at: '2024-01-13T09:15:00Z'
+    updated_at: '2024-01-13T09:15:00Z',
+    contact_name: 'Mike Johnson',
+    contact_phone: '+60123456791',
+    contact_email: 'mike@example.com',
+    weight: 15.0
   },
   {
     id: '4',
@@ -66,7 +78,11 @@ const mockItems: Item[] = [
     user_id: 'user4',
     status: 'Available',
     created_at: '2024-01-12T14:20:00Z',
-    updated_at: '2024-01-12T14:20:00Z'
+    updated_at: '2024-01-12T14:20:00Z',
+    contact_name: 'Sarah Wilson',
+    contact_phone: '+60123456792',
+    contact_email: 'sarah@example.com',
+    weight: 1.5
   }
 ]
 
