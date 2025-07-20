@@ -142,6 +142,42 @@ export default function RequestsPage() {
         return
       }
 
+      // If approving a request, check if there are other approved requests for the same item
+      if (newStatus === 'Approved') {
+        const { data: existingApprovedRequests, error: checkError } = await supabase
+          .from('requests')
+          .select('id')
+          .eq('item_id', requestData.item_id)
+          .eq('status', 'Approved')
+          .neq('id', requestId) // Exclude the current request
+
+        if (checkError) {
+          console.error('Error checking existing approved requests:', checkError)
+          alert('Error updating request status')
+          return
+        }
+
+        if (existingApprovedRequests && existingApprovedRequests.length > 0) {
+          alert('This item already has an approved request. Please complete or reject the existing approved request first.')
+          return
+        }
+
+        // Reject all other pending requests for this item
+        const { error: rejectError } = await supabase
+          .from('requests')
+          .update({ status: 'Rejected' })
+          .eq('item_id', requestData.item_id)
+          .eq('status', 'Pending')
+          .neq('id', requestId)
+
+        if (rejectError) {
+          console.error('Error rejecting other pending requests:', rejectError)
+          // Continue anyway, don't fail the approval
+        } else {
+          console.log('Rejected other pending requests for this item')
+        }
+      }
+
       // Update the request status
       const { error: updateError } = await supabase
         .from('requests')
@@ -164,9 +200,20 @@ export default function RequestsPage() {
           // When marking as completed, always set item to Taken
           newItemStatus = 'Taken'
         } else if (newStatus === 'Rejected') {
-          // When rejecting a request, always set item back to Available
-          // This allows the item to be requested again by others
-          newItemStatus = 'Available'
+          // Check if there are any other approved requests for this item
+          const { data: otherApprovedRequests, error: checkError } = await supabase
+            .from('requests')
+            .select('id')
+            .eq('item_id', requestData.item_id)
+            .eq('status', 'Approved')
+
+          if (!checkError && otherApprovedRequests && otherApprovedRequests.length > 0) {
+            // If there are other approved requests, keep item as Requested
+            newItemStatus = 'Requested'
+          } else {
+            // If no other approved requests, set item back to Available
+            newItemStatus = 'Available'
+          }
         }
 
         // Update the item status using the database function
@@ -183,6 +230,71 @@ export default function RequestsPage() {
           return
         } else {
           console.log(`Successfully updated item status to: ${newItemStatus}. Result:`, updateResult)
+        }
+      }
+
+      // Send email notification to requester if request is approved or rejected
+      if (newStatus === 'Approved' || newStatus === 'Rejected') {
+        console.log(`=== REQUEST ${newStatus.toUpperCase()} - SENDING EMAIL TO REQUESTER ===`)
+        try {
+          // Get the full request data including requester email and item details
+          const { data: fullRequestData, error: fetchFullError } = await supabase
+            .from('requests')
+            .select(`
+              requester_email,
+              requester_name,
+              message,
+              items (
+                title,
+                contact_name,
+                contact_email,
+                contact_phone,
+                postcode,
+                city
+              )
+            `)
+            .eq('id', requestId)
+            .single()
+
+          console.log('Full request data:', fullRequestData)
+          console.log('Fetch error:', fetchFullError)
+
+          if (!fetchFullError && fullRequestData) {
+            console.log(`Sending ${newStatus.toLowerCase()} email to requester...`)
+            
+            if (newStatus === 'Approved') {
+              await sendEmailToRequester({
+                requesterEmail: fullRequestData.requester_email,
+                requesterName: fullRequestData.requester_name,
+                itemTitle: fullRequestData.items?.title || 'Unknown Item',
+                ownerName: fullRequestData.items?.contact_name || 'Item Owner',
+                ownerEmail: fullRequestData.items?.contact_email || '',
+                ownerPhone: fullRequestData.items?.contact_phone || '',
+                location: `${fullRequestData.items?.city || ''} ${fullRequestData.items?.postcode || ''}`.trim(),
+                originalMessage: fullRequestData.message,
+                status: 'approved'
+              })
+            } else if (newStatus === 'Rejected') {
+              await sendEmailToRequester({
+                requesterEmail: fullRequestData.requester_email,
+                requesterName: fullRequestData.requester_name,
+                itemTitle: fullRequestData.items?.title || 'Unknown Item',
+                ownerName: fullRequestData.items?.contact_name || 'Item Owner',
+                ownerEmail: fullRequestData.items?.contact_email || '',
+                ownerPhone: fullRequestData.items?.contact_phone || '',
+                location: `${fullRequestData.items?.city || ''} ${fullRequestData.items?.postcode || ''}`.trim(),
+                originalMessage: fullRequestData.message,
+                status: 'rejected'
+              })
+            }
+            
+            console.log(`${newStatus} email sent successfully to requester`)
+          } else {
+            console.error('Failed to fetch full request data:', fetchFullError)
+          }
+        } catch (emailError) {
+          console.error(`Error sending ${newStatus.toLowerCase()} email to requester:`, emailError)
+          // Don't fail the request if email fails, just log it
         }
       }
 
@@ -364,4 +476,135 @@ export default function RequestsPage() {
       </main>
     </div>
   )
+}
+
+// Function to send approval/rejection email to requester
+async function sendEmailToRequester({
+  requesterEmail,
+  requesterName,
+  itemTitle,
+  ownerName,
+  ownerEmail,
+  ownerPhone,
+  location,
+  originalMessage,
+  status
+}: {
+  requesterEmail: string
+  requesterName: string
+  itemTitle: string
+  ownerName: string
+  ownerEmail: string
+  ownerPhone: string
+  location: string
+  originalMessage: string
+  status: 'approved' | 'rejected'
+}) {
+  console.log('=== STARTING EMAIL TO REQUESTER ===')
+  console.log('Requester Email:', requesterEmail)
+  console.log('Requester Name:', requesterName)
+  console.log('Item Title:', itemTitle)
+  console.log('Status:', status)
+  
+  let emailContent = ''
+  let subject = ''
+  
+  if (status === 'approved') {
+    subject = 'Your request has been approved!'
+    emailContent = `
+      Hi ${requesterName},
+
+      Great news! Your request for "${itemTitle}" has been approved! 🎉
+
+      Item Details:
+      - Item: ${itemTitle}
+      - Owner: ${ownerName}
+      - Location: ${location || 'Contact owner for details'}
+
+      Contact Information:
+      ${ownerEmail ? `- Email: ${ownerEmail}` : ''}
+      ${ownerPhone ? `- Phone: ${ownerPhone}` : ''}
+
+      Your Original Message:
+      "${originalMessage}"
+
+      Next Steps:
+      1. Contact the item owner using the information above
+      2. Arrange a time and place to collect the item
+      3. Meet up and collect your item
+      4. The owner will mark the request as "Completed" once you've collected it
+
+      Thank you for using ReuseLa to give items a second life! ♻️
+
+      Best regards,
+      The ReuseLa Team
+    `
+  } else if (status === 'rejected') {
+    subject = 'Update on your request'
+    emailContent = `
+      Hi ${requesterName},
+
+      We wanted to let you know that your request for "${itemTitle}" has been declined by the item owner.
+
+      Item Details:
+      - Item: ${itemTitle}
+      - Owner: ${ownerName}
+
+      Your Original Message:
+      "${originalMessage}"
+
+      Don't worry! There are plenty of other items available on ReuseLa. 
+      Feel free to browse our platform for other items that might interest you.
+
+      Thank you for using ReuseLa to give items a second life! ♻️
+
+      Best regards,
+      The ReuseLa Team
+    `
+  }
+
+  // Log the email for debugging
+  console.log('=== EMAIL TO REQUESTER ===')
+  console.log('To:', requesterEmail)
+  console.log('Subject:', subject)
+  console.log('Content:', emailContent)
+  console.log('==========================')
+
+  // Send email using API route
+  try {
+    console.log('Calling /api/send-email...')
+    const response = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: requesterEmail,
+        subject: subject,
+        text: emailContent,
+      }),
+    })
+
+    console.log('Response status:', response.status)
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API response error:', errorText)
+      throw new Error(`API error: ${response.status} - ${errorText}`)
+    }
+
+    const result = await response.json()
+    console.log('API response:', result)
+
+    if (result.success) {
+      console.log(`${status} email sent successfully to requester`)
+      return { success: true, data: result }
+    } else {
+      console.error('API returned error:', result.error)
+      throw new Error(result.error || 'Unknown API error')
+    }
+  } catch (emailError) {
+    console.error(`Failed to send ${status} email to requester:`, emailError)
+    throw emailError
+  }
 } 

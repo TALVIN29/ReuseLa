@@ -113,3 +113,21 @@ node_modules/
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test 
+# ========================================
+# Environment Security Rules
+# ========================================
+# Environment files - NEVER commit these!
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Secure environment directory
+env/development/.env.local
+env/production/.env.local
+env/*/.env.*
+
+# Keep directory structure but ignore sensitive files
+!env/
+!env/development/
+!env/production/

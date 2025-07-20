@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   try {
@@ -116,9 +119,6 @@ async function sendEmailToOwner({
   message: string
   preferredContact: string
 }) {
-  // For now, we'll use a simple email service
-  // In production, you'd use a proper email service like SendGrid, AWS SES, etc.
-  
   const emailContent = `
     Hi ${ownerName},
 
@@ -138,35 +138,37 @@ async function sendEmailToOwner({
     The ReuseLa Team
   `
 
-  // For development, we'll just log the email
+  // Log the email for debugging
   console.log('=== EMAIL TO OWNER ===')
   console.log('To:', ownerEmail)
   console.log('Subject: New request for your item on ReuseLa')
   console.log('Content:', emailContent)
   console.log('======================')
 
-  // In production, you would send the actual email here
-  // Example with a real email service:
-  /*
-  const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      personalizations: [{
-        to: [{ email: ownerEmail, name: ownerName }]
-      }],
-      from: { email: 'noreply@reusela.com', name: 'ReuseLa' },
-      subject: 'New request for your item on ReuseLa',
-      content: [{
-        type: 'text/plain',
-        value: emailContent
-      }]
-    })
-  })
-  */
+  // Send email using Resend
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: 'ReuseLa <onboarding@resend.dev>',
+        to: [ownerEmail],
+        subject: 'New request for your item on ReuseLa',
+        text: emailContent,
+      })
 
-  return { success: true }
+      if (error) {
+        console.error('Resend email error:', error)
+        throw error
+      }
+
+      console.log('Email sent successfully:', data)
+      return { success: true, data }
+    } catch (resendError) {
+      console.error('Failed to send email via Resend:', resendError)
+      throw resendError
+    }
+  } else {
+    console.log('RESEND_API_KEY not configured - email not sent')
+    // In development, you might want to just log the email
+    return { success: true, message: 'Email logged (RESEND_API_KEY not configured)' }
+  }
 } 
