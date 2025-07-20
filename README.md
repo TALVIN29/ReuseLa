@@ -1,40 +1,44 @@
-# ReuseLa - Sustainable Item Sharing Platform
+# ReuseLa ♻️
 
-A modern web application built with Next.js 14, TypeScript, and Supabase that enables users to share and request items, promoting sustainability and community building.
+A sustainable item sharing platform that connects people who want to give away items with those who need them, promoting a circular economy and reducing waste.
 
 ## 🌟 Features
 
-- **Item Sharing**: Post items you no longer need
-- **Item Discovery**: Browse and search available items
-- **Request System**: Request items with messaging
-- **Real-time Updates**: Live updates for item status changes
-- **User Profiles**: Track your sharing activity and impact
-- **Impact Dashboard**: See platform-wide environmental impact
-- **Rating System**: Rate your sharing experiences
-- **Email Notifications**: Get notified about requests
+### Core Functionality
+- **Item Posting**: Users can post items they want to give away
+- **Item Browsing**: Browse available items by category and location
+- **Request System**: Request items with personalized messages
+- **Status Management**: Track request status (Pending, Approved, Rejected, Completed)
+- **Email Notifications**: Automated email notifications for all request status changes
+
+### User Experience
+- **Modern UI**: Clean, responsive design with Tailwind CSS
+- **Real-time Updates**: Live status updates and notifications
+- **User Authentication**: Secure login system with Supabase Auth
+- **Profile Management**: User profiles and dashboard
+- **Rating System**: Rate transactions after completion
+
+### Technical Features
+- **Next.js 14**: Modern React framework with App Router
+- **TypeScript**: Type-safe development
+- **Supabase**: Backend-as-a-Service for database and authentication
+- **Resend**: Email delivery service
 - **Responsive Design**: Works on all devices
 
-## 🚀 Tech Stack
+## 🚀 Getting Started
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
-- **Backend**: Supabase (PostgreSQL, Auth, Real-time)
-- **Styling**: Tailwind CSS with custom design system
-- **Icons**: Lucide React
-- **Deployment**: Vercel-ready
-
-## 📋 Prerequisites
-
+### Prerequisites
 - Node.js 18+ 
 - npm or yarn
 - Supabase account
-- Git
+- Resend account (for email notifications)
 
-## 🛠️ Installation
+### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
-   cd ReuseLa
+   git clone https://github.com/yourusername/reusela.git
+   cd reusela
    ```
 
 2. **Install dependencies**
@@ -47,17 +51,19 @@ A modern web application built with Next.js 14, TypeScript, and Supabase that en
    cp env.example .env.local
    ```
    
-   Fill in your Supabase credentials:
-   ```
+   Fill in your environment variables:
+   ```env
+   # Supabase Configuration
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   
+   # Email Configuration (Resend)
+   RESEND_API_KEY=your_resend_api_key
    ```
 
 4. **Set up the database**
-   - Go to your Supabase dashboard
-   - Navigate to SQL Editor
-   - Run the contents of `database-setup-final.sql`
+   - Run the SQL script in `database-setup-final.sql` in your Supabase SQL editor
+   - Run the SQL script in `fix-update-item-status.sql` to fix the update function
 
 5. **Start the development server**
    ```bash
@@ -67,81 +73,77 @@ A modern web application built with Next.js 14, TypeScript, and Supabase that en
 6. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-## 🗄️ Database Setup
+## 📧 Email Notifications
 
-Run the `database-setup-final.sql` file in your Supabase SQL Editor to create:
+The platform sends automated emails for:
+- **New Requests**: Item owners are notified when someone requests their item
+- **Request Approval**: Requesters are notified when their request is approved
+- **Request Rejection**: Requesters are notified when their request is declined
 
-- Ratings table with proper constraints
-- Helper functions for rating calculations
-- Auto-expire function for items
-- Row Level Security policies
+## 🗄️ Database Schema
 
-## 📱 App Structure
+### Key Tables
+- **items**: Posted items with details and status
+- **requests**: Item requests with status tracking
+- **ratings**: User ratings for completed transactions
+- **users**: User profiles and authentication
 
+### Status Flow
+1. **Available** → Item is posted and ready for requests
+2. **Requested** → Item has an approved request
+3. **Taken** → Item has been collected
+4. **Expired** → Item automatically expires after 3 days
+
+## 🛠️ Development
+
+### Available Scripts
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+### Project Structure
 ```
-ReuseLa/
-├── app/                    # Next.js 14 app directory
+reusela/
+├── app/                    # Next.js App Router
 │   ├── api/               # API routes
-│   ├── browse/            # Browse items page
-│   ├── dashboard/         # Impact dashboard
-│   ├── item/[id]/         # Item details page
-│   ├── login/             # Authentication page
-│   ├── post/              # Post new item page
-│   ├── profile/           # User profile page
-│   └── requests/          # Manage requests page
+│   ├── browse/            # Item browsing page
+│   ├── dashboard/         # User dashboard
+│   ├── item/[id]/         # Individual item page
+│   ├── login/             # Authentication
+│   ├── post/              # Item posting
+│   ├── profile/           # User profile
+│   └── requests/          # Request management
 ├── components/            # Reusable components
 ├── contexts/              # React contexts
 ├── lib/                   # Utility functions
 └── scripts/               # Setup scripts
 ```
 
-## 🔧 Key Features Explained
+## 🔧 Configuration
 
-### Real-time Updates
-- Uses Supabase real-time subscriptions
-- Items update automatically across all users
-- Request status changes are reflected immediately
+### Supabase Setup
+1. Create a new Supabase project
+2. Enable Row Level Security (RLS)
+3. Set up authentication providers
+4. Run the database setup scripts
 
-### Item Status Management
-- **Available**: Item is up for grabs
-- **Requested**: Someone has requested the item
-- **Taken**: Item has been collected
-- **Expired**: Item listing has expired (after 3 days)
-
-### Request System
-- Users can request items with custom messages
-- Item owners receive email notifications
-- Owners can approve/reject requests
-- Automatic status updates
-
-### Impact Tracking
-- Tracks items shared, requested, and completed
-- Calculates environmental impact
-- Shows community statistics
+### Email Setup
+1. Create a Resend account
+2. Get your API key
+3. Add the key to your environment variables
 
 ## 🚀 Deployment
 
-### Deploy to Vercel
+### Vercel (Recommended)
+1. Connect your GitHub repository to Vercel
+2. Add environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
 
-1. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
-
-2. **Connect to Vercel**
-   - Go to [vercel.com](https://vercel.com)
-   - Import your GitHub repository
-   - Add environment variables
-   - Deploy!
-
-### Environment Variables for Production
-
-Make sure to set these in your Vercel dashboard:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+### Other Platforms
+- **Netlify**: Similar to Vercel setup
+- **Railway**: Full-stack deployment
+- **AWS**: Manual deployment with EC2
 
 ## 🤝 Contributing
 
@@ -151,24 +153,24 @@ Make sure to set these in your Vercel dashboard:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
+## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- Built with Next.js 14 and Supabase
-- Icons from Lucide React
-- Styling with Tailwind CSS
-- Community-driven development
+- **Supabase** for the backend infrastructure
+- **Resend** for email delivery
+- **Next.js** for the amazing framework
+- **Tailwind CSS** for the beautiful styling
 
 ## 📞 Support
 
-If you have any questions or need help:
+If you have any questions or need help, please:
 - Open an issue on GitHub
 - Check the documentation
 - Contact the development team
 
 ---
 
-**ReuseLa** - Making sharing sustainable, one item at a time! ♻️ 
+**Made with ❤️ for a more sustainable future** 
